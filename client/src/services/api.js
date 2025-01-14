@@ -24,7 +24,7 @@ const createTheApiClient = (idToken) => {
 
     unpairScooter: async (vehicleId) => {
       try {
-        const response = await instance.post("/pairScooter", {
+        const response = await instance.delete("/pairScooter", {
           data: { vehicleId },
         });
         return response.data;
@@ -32,10 +32,11 @@ const createTheApiClient = (idToken) => {
         throw new Error(`Failed to unpairscooter: ${error.message}`);
       }
     },
+    
 
     SendScooterCommand: async (command, vehicleId) => {
       try {
-        const response = await instance.post("/send-coomands", {
+        const response = await instance.post("/send-commands", {
           command,
           vehicleId,
         });

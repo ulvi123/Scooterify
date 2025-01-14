@@ -13,11 +13,15 @@ const defaultCenter = {
   lng: -0.1278
 };
 
+console.log(process.env.VITE_GOOGLE_MAPS_API_KEY);
+
 const ScooterMap = ({ scooterLocation, userLocation }) => {
   if (!scooterLocation) return null;
+  console.log('Scooter Location:', scooterLocation);
+
 
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+    <LoadScript googleMapsApiKey={process.env.VITE_GOOGLE_MAPS_API_KEY}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={scooterLocation}
