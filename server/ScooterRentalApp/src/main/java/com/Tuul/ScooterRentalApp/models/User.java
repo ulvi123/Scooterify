@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class User {
     @DocumentId
-    private String id;  // Firebase UID
+    private String id;
     private String email;
     private String name;
     private String activeVehicle;
@@ -19,7 +19,6 @@ public class User {
     }
 
     public User(String id, String email, String name, String activeVehicle) {
-        this.id = id;
         this.email = email;
         this.name = name;
         this.activeVehicle = activeVehicle;
@@ -32,16 +31,15 @@ public class User {
     public String getName() {
         return name; // Assuming you have a name field
     }
-    
-    
 
     public String getId() {
         return id;
     }
-
+    
     public void setId(String id) {
         this.id = id;
     }
+    
 
     public String getActiveVehicle() {
         return activeVehicle;

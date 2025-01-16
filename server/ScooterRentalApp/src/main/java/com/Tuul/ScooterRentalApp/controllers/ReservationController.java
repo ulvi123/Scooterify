@@ -27,6 +27,7 @@ public class ReservationController {
     @Autowired
     private VehicleService vehicleService;
 
+    // create reservation
     @PostMapping
     public ResponseEntity<String> createReservation(@RequestBody Reservation reservation)
             throws ExecutionException, InterruptedException, TimeoutException {
@@ -34,6 +35,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservationId);
     }
 
+    // get reservation
     @GetMapping("/{vehicleId}")
     public ResponseEntity<Reservation> getReservation(@PathVariable String vehicleId)
             throws ExecutionException, InterruptedException, TimeoutException {
@@ -42,26 +44,17 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // finish reservation
     @PutMapping("/{vehicleId}")
     public ResponseEntity<String> finishReservation(
             @PathVariable String vehicleId,
             @RequestParam double endLatitude,
             @RequestParam double endLongitude) throws ExecutionException, InterruptedException, TimeoutException {
         reservationService.finishReservation(vehicleId, endLatitude, endLongitude);
-
-        // String vehicle = vehicleService.getVehicle(vehicleId).get();
-        
-        // if(vehicle == null){
-        //     return ResponseEntity.notFound().build();
-        // }
-
-        // vehicle.setRented(false);
-        // vehicle.updateVehicle(vehicle);
-
-
         return ResponseEntity.ok("Reservation finished");
     }
 
+    // get active reservation
     @GetMapping("/active")
     public ResponseEntity<?> getActiveReservation(@RequestHeader("Authorization") String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -76,10 +69,10 @@ public class ReservationController {
             Optional<Reservation> activeReservation = reservationService.getActiveReservation(uid);
 
             if (activeReservation.isEmpty()) {
-                return ResponseEntity.noContent().build(); // 204 No Content
+                return ResponseEntity.noContent().build(); 
             }
 
-            // Return the entire reservation object, not just the ID
+    
             return ResponseEntity.ok(activeReservation.get());
 
         } catch (FirebaseAuthException e) {

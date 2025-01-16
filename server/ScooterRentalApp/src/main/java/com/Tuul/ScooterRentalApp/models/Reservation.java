@@ -75,6 +75,10 @@ public class Reservation {
         return null;
     }
 
+    public String getVehicleId() {
+        return vehicleId;
+    }
+
     public void finishReservation(double endLatitude, double endLongitude) {
         this.endLatitude = endLatitude;
         this.endLongitude = endLongitude;

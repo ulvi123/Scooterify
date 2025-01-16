@@ -50,7 +50,7 @@ export const unpairScooter = async (vehicleId, idToken) => {
       headers: { Authorization: `Bearer ${idToken}` },
     });
   } catch (error) {
-    handleError(error,"unpairScooter");
+    handleError(error, "unpairScooter");
   }
 };
 
@@ -59,9 +59,9 @@ export const finishReservation = async (
   endLatitude,
   endLongitude,
   idToken
+  // reservationId
 ) => {
   try {
-    
     if (!idToken) {
       throw new Error("Authentication token is required");
     }
@@ -78,7 +78,7 @@ export const finishReservation = async (
       console.log("Reservation finished successfully:", response.data);
       return response.data;
     }
-    
+
     throw new Error("No data received from server");
   } catch (error) {
     console.error("Error in finishReservation:", error);
@@ -87,7 +87,7 @@ export const finishReservation = async (
       console.error("Response status:", error.response.status);
       console.error("Response headers:", error.response.headers);
     }
-    handleError(error,"finishReservation");
+    handleError(error, "finishReservation");
   }
 };
 
@@ -134,7 +134,6 @@ export const sendScooterCommand = async (vehicleId, command) => {
     throw error;
   }
 };
-
 
 export const getTheCurrentUserData = async () => {
   try {
@@ -191,9 +190,10 @@ export const getTheCurrentVehicleData = async (vehicleId) => {
     console.log("Vehicle data from Firestore:", vehicleData);
 
     if (!vehicleData.location.latitude || !vehicleData.longitude) {
-      console.warn("the current Vehicle location data is missing in Firestore!");
+      console.warn(
+        "the current Vehicle location data is missing in Firestore!"
+      );
     }
-
 
     return vehicleData;
   } catch (error) {
@@ -235,11 +235,11 @@ export const getVehicleStatus = async (vehicleId) => {
       estimatedRange: vehicleData.estimatedRange || 0,
       location: {
         lat: location.latitude || 0,
-        lng: location.longitude || 0
+        lng: location.longitude || 0,
       },
       odometer: vehicleData.odometer || 0,
       poweredOn: vehicleData.poweredOn || false,
-      soc: vehicleData.soc || 0, 
+      soc: vehicleData.soc || 0,
     };
   } catch (error) {
     console.error("Error fetching vehicle status", error);
@@ -262,23 +262,40 @@ export const handleError = (error, operationName) => {
   throw error;
 };
 
-
-export const getReservationIdFromStorage = async(idToken)=>{
+export const getReservationIdFromStorage = async (idToken) => {
   try {
-    const response = await axios.get(`${API_URL}/reservations/active`,{
-      headers:{
+    const response = await axios.get(`${API_URL}/reservations/active`, {
+      headers: {
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
-      }
-    })
-    if(!response.data || !response.data.id){
-      console.error("No reservation id found")
-      return null
+      },
+    });
+    if (!response.data || !response.data.id) {
+      console.error("No reservation id found");
+      return null;
     }
 
-    return response.data.id
+    return response.data.id;
   } catch (error) {
-    console.error("Error fetching active reservation", error.message,);
-    return null
+    console.error("Error fetching active reservation", error.message);
+    return null;
   }
-}
+};
+
+//not implemented method-backend code is developed for fetching reservation-not tested yet in front end
+export const testReservation = async (vehicleId, idToken) => {
+  try {
+    console.log("Making request to:", `${API_URL}/reservations/${vehicleId}`);
+    console.log("Authorization header:", `Bearer ${idToken}`);
+    const response = await axios.get(`${API_URL}/reservations/${vehicleId}`, {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("Reservation data:", response.data);
+  } catch (error) {
+    console.error("Error fetching reservation:", error);
+  }
+};

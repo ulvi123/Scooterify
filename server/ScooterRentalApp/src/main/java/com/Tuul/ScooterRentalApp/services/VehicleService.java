@@ -11,20 +11,19 @@ import com.google.cloud.firestore.Query;
 import com.google.firebase.cloud.FirestoreClient;
 import com.Tuul.ScooterRentalApp.firebase.FirebaseInitialization;
 import org.springframework.stereotype.Service;
+import com.google.cloud.firestore.FieldValue;
+
 
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID; // For generating pairing codes
-
+import java.util.UUID;
 
 @Service
 public class VehicleService {
 
     private final Firestore firestore;
-
-
 
     public VehicleService(FirebaseInitialization firebaseInitialization) {
         this.firestore = FirestoreClient.getFirestore();
@@ -52,7 +51,6 @@ public class VehicleService {
         }
         return Optional.empty();
     }
-
 
     public Optional<Vehicle> findByPairingCode(String pairingCode) throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> future = firestore.collection("vehicles")
@@ -117,8 +115,8 @@ public class VehicleService {
         }
     }
 
-
-    public void updateVehiclePowerStatus(String vehicleId, String command) throws ExecutionException, InterruptedException {
+    public void updateVehiclePowerStatus(String vehicleId, String command)
+            throws ExecutionException, InterruptedException {
         // Validate the command
         if (!"ON".equals(command) && !"OFF".equals(command)) {
             throw new IllegalArgumentException("Invalid command. It must be 'ON' or 'OFF'.");
@@ -137,29 +135,64 @@ public class VehicleService {
         System.out.println("Vehicle " + vehicleId + " powered " + command);
     }
 
+    // public void unpairVehicle(String vehicleId) throws ExecutionException, InterruptedException {
+    //     if (vehicleId == null || vehicleId.length() == 0 || vehicleId.isEmpty()) {
+    //         throw new IllegalArgumentException("Vehicle ID is invalid.");
+    //     }
 
+    //     // vehicleId or id--check it after testing,if it failes, then put id since in
+    //     // firestore it is stated as id
+    //     DocumentReference docRef = firestore.collection("vehicles").document(vehicleId);
+    //     Map<String, Object> updates = new HashMap<String, Object>();
+    //     updates.put("rented", false);
+    //     updates.put("userId", null);
+    //     updates.put("pairingCode", generateNewPairingCode());
 
-    public void unpairVehicle(String vehicleId) throws ExecutionException,InterruptedException {
-        if(vehicleId == null || vehicleId.length() == 0 || vehicleId.isEmpty()) {
+    //     // Here I am pushing the updates to the firestire to unpair the vehicle
+    //     docRef.update(updates).get();
+
+    // }
+
+    private String generateNewPairingCode() {
+        return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    public void unpairVehicle(String vehicleId) throws ExecutionException, InterruptedException {
+        if (vehicleId == null || vehicleId.isEmpty()) {
             throw new IllegalArgumentException("Vehicle ID is invalid.");
         }
 
-        //vehicleId or id--check it after testing,if it failes, then put id since in firestore it is stated as id
         DocumentReference docRef = firestore.collection("vehicles").document(vehicleId);
-        Map<String,Object> updates = new HashMap<String,Object>();
-        updates.put("rented",false);
-        updates.put("userId",null);
-        updates.put("pairingCode",generateNewPairingCode());
+        DocumentSnapshot snapshot = docRef.get().get();
+
+        if (!snapshot.exists()) {
+            throw new IllegalStateException("Vehicle not found");
+        }
+        System.out.println("Vehicle state before unpair: " + snapshot.getData());
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("rented", false);
+        updates.put("userId", null);
+        updates.put("pairingCode", generateNewPairingCode());
+        updates.put("lastUnpairedAt", FieldValue.serverTimestamp());
+
+  
+        String currentUserId = snapshot.getString("userId");
+        if (currentUserId != null) {
+            DocumentReference userRef = firestore.collection("users").document(currentUserId);
+            DocumentSnapshot userSnapshot = userRef.get().get();
+            if (userSnapshot.exists()) {
+                String activeVehicle = userSnapshot.getString("activeVehicle");
+                if (vehicleId.equals(activeVehicle)) {
+                    userRef.update("activeVehicle", null).get();
+                }
+            }
+        }
+
+        docRef.update(updates).get();
+
+        DocumentSnapshot afterUpdate = docRef.get().get();
+        System.out.println("Vehicle state after unpair: " + afterUpdate.getData());
     }
-
-    private String generateNewPairingCode(){
-        return UUID.randomUUID().toString().substring(0,8).toUpperCase();
-    }
-
-
-
-
-
-
 
 }

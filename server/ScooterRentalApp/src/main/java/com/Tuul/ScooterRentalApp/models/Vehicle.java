@@ -3,7 +3,7 @@
 package com.Tuul.ScooterRentalApp.models;
 import java.time.LocalDateTime;
 
-import lombok.Data;
+import lombok.Data; //Usually Lombok does provide bakground implementaiton for getters and setters but somehow the compiler was complaining so I added them manually
 @Data
 public class Vehicle {
     private String id;
@@ -12,12 +12,11 @@ public class Vehicle {
     private double longitude;
     private double latitude;
     private String pairingCode;
-    private boolean rented;  // Change from isRented to rented to match Firestore
+    private boolean rented;  
     private double estimatedRange;
-    private String userId;  // New field to associate a scooter with a user
+    private String userId;  
     private boolean poweredOn;
-    private LocalDateTime lastUpdated; // Field to store the last updated time
-
+ 
 
     public String getUserId() {
         return this.userId;
@@ -68,13 +67,18 @@ public class Vehicle {
         this.poweredOn = poweredOn;
     }
 
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
+   
+
+    public double getLatitude() {
+        return latitude;
     }
 
-    public LocalDateTime getLastUpdated() {
-        return lastUpdated;
+    public double getLongitude() {
+        return longitude;
     }
+
+   
+
 
 
 }

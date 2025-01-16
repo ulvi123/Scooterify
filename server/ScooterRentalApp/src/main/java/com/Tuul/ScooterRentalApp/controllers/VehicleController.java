@@ -91,7 +91,10 @@ public class VehicleController {
 
             Vehicle vehicle = vehicleOptional.get();
 
-            if (!userId.equals(vehicle.getUserId())) {
+            System.out.println("Unpair attempt - Vehicle userId: " + vehicle.getUserId() + ", Request userId: " + userId);
+
+
+            if (vehicle.getUserId() != null && !userId.equals(vehicle.getUserId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("User is not authorized to unpair this vehicle");
             }
@@ -111,22 +114,22 @@ public class VehicleController {
             @RequestParam String command,
             @RequestHeader("Authorization") String authorization) {
         try {
-            // Check for Authorization header
+      
             if (authorization == null || !authorization.startsWith("Bearer ")) {
                 return ResponseEntity.status(401).body("Missing or invalid Authorization header");
             }
 
-            // Extract token - only need to do this once
+        
             String idToken = authorization.substring(7);
             System.out.println("Token length: " + idToken.length());
 
             try {
-                // Verify the token
+        
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
                 String uid = decodedToken.getUid();
                 System.out.println("Token verified successfully for user: " + uid);
 
-                // Fetch the vehicle details
+      
                 Optional<Vehicle> vehicleOpt = vehicleService.getVehicle(vehicleId);
 
                 if (vehicleOpt.isEmpty()) {
@@ -135,7 +138,7 @@ public class VehicleController {
 
                 Vehicle vehicle = vehicleOpt.get();
 
-                // Process power command
+          
                 if ("ON".equalsIgnoreCase(command) || "OFF".equalsIgnoreCase(command)) {
                     vehicleService.updateVehiclePowerStatus(vehicleId, command);
                     return ResponseEntity.ok(vehicle);
@@ -163,7 +166,7 @@ class PairingRequest {
     private String pairingCode;
     private String userId;
 
-    // Getters and setters
+ 
     public String getPairingCode() {
         return pairingCode;
     }

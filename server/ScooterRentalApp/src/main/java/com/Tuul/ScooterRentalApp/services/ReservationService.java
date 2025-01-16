@@ -63,7 +63,7 @@ public class ReservationService {
 
     // storing the reservation to the firestore
     private String saveReservationAndVehicle(Reservation reservation, Vehicle vehicle)
-            throws ExecutionException,TimeoutException, InterruptedException {
+            throws ExecutionException, TimeoutException, InterruptedException {
         WriteBatch batch = firestore.batch();
         DocumentReference vehicleRef = firestore.collection("vehicles").document(reservation.getVehicleId());
         DocumentReference docRef = firestore.collection("reservations").document();
@@ -96,7 +96,7 @@ public class ReservationService {
     public Optional<Reservation> getReservation(String vehicleId)
             throws ExecutionException, InterruptedException, TimeoutException {
         DocumentReference docRef = firestore.collection("reservations").document(vehicleId);
-        DocumentSnapshot document = docRef.get().get(5, TimeUnit.SECONDS); // Throws TimeoutException
+        DocumentSnapshot document = docRef.get().get(5, TimeUnit.SECONDS); 
         if (document.exists()) {
             return Optional.ofNullable(document.toObject(Reservation.class));
         } else {
@@ -104,29 +104,9 @@ public class ReservationService {
         }
     }
 
-    // caluclating the ride duration post-reservation finish
-    private long calculateRentalDurationMinutes(LocalDateTime startTime, LocalDateTime endTime) {
-        if (endTime == null || startTime == null) {
-            return 0;
-        }
-        Duration duration = Duration.between(startTime, endTime);
-        return duration.toMinutes();
-    }
-
-    // calculating the cost of the rental
-    private double calculateCost(long minutes) {
-        double cost = 1.0; // 1€ per rental start
-        if (minutes <= 10) {
-            cost += minutes * 0.5;
-        } else {
-            cost += 10 * 0.5;
-            cost += (minutes - 10) * 0.3;
-        }
-        return cost;
-    }
-
     // getting the active reservation id
-    public Optional<Reservation> getActiveReservation(String userId) throws ExecutionException, InterruptedException, TimeoutException {
+    public Optional<Reservation> getActiveReservation(String userId)
+            throws ExecutionException, InterruptedException, TimeoutException {
         try {
             // First get the ApiFuture
             ApiFuture<QuerySnapshot> future = firestore.collection("reservations")
@@ -134,17 +114,17 @@ public class ReservationService {
                     .whereEqualTo("endTime", null)
                     .limit(1)
                     .get();
-    
+
             // Then apply timeout to the future
             QuerySnapshot querySnapshot = future.get(5, TimeUnit.SECONDS);
-            
+
             if (!querySnapshot.isEmpty()) {
                 DocumentSnapshot document = querySnapshot.getDocuments().get(0);
                 return Optional.ofNullable(document.toObject(Reservation.class));
             }
-            
+
             return Optional.empty();
-            
+
         } catch (TimeoutException e) {
             System.err.println("Firestore query timed out: " + e.getMessage());
             throw e;
@@ -153,24 +133,22 @@ public class ReservationService {
 
     // method to finish the reservation and update the vehicle and the reservation
     // data
-    public void finishReservation(String reservationId, double endLatitude, double endLongitude)
+    public void finishReservation(String vehicleId, double endLatitude, double endLongitude)
             throws ExecutionException, InterruptedException, TimeoutException {
-        Optional<Reservation> optionalReservation = getReservation(reservationId);
+        Optional<Reservation> optionalReservation = getReservation(vehicleId);
         if (optionalReservation.isPresent()) {
             Reservation reservation = optionalReservation.get();
             reservation.setEndLatitude(endLatitude);
             reservation.setEndLongitude(endLongitude);
             reservation.setEndTime(LocalDateTime.now(ZoneId.of("UTC")));
 
-            
-
             Map<String, Object> updates = new HashMap<>();
             updates.put("endLatitude", reservation.getEndLatitude());
             updates.put("endLongitude", reservation.getEndLongitude());
-            updates.put("endTime", reservation.getEndTime()); 
+            updates.put("endTime", reservation.getEndTime());
             updates.put("cost", reservation.calculateCost());
 
-            DocumentReference docRef = firestore.collection("reservations").document(reservationId);
+            DocumentReference docRef = firestore.collection("reservations").document(vehicleId);
             docRef.update(updates).get(5, TimeUnit.SECONDS); // Add timeout
         }
     }
